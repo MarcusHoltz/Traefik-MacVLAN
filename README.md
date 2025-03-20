@@ -5,6 +5,7 @@ It is possible with a MacVLAN.
 
 For a complete yet simple example, visit https://github.com/oglimmer/traefik-loki-grafana-web-analytics.
 
+For the full guide that goes along with this repo, visit [https://blog.holtzweb.com](#urlhere).
 
 ## Geo Location Lookup File Needed
 
