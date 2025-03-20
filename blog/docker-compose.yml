@@ -1,0 +1,151 @@
+services:
+  traefik:
+    image: traefik
+    container_name: traefik
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik/access-logs:/opt/access-logs
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik-dashboard.noweb.myneatodomain.com`)"
+      - "traefik.http.routers.traefik.entrypoints=web"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+    networks:
+      traefik2host:
+        ipv4_address: 172.21.192.251
+      traefik_proxy_net:
+
+  whoami1:
+    image: traefik/whoami
+    container_name: whoami1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami1.rule=Host(`whoami1.noweb.myneatodomain.com`)"
+      - "traefik.http.routers.whoami1.entrypoints=web"
+    networks:
+      - traefik_proxy_net
+
+  whoami2:
+    image: traefik/whoami
+    container_name: whoami2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami2.rule=Host(`whoami2.noweb.myneatodomain.com`)"
+      - "traefik.http.routers.whoami2.entrypoints=web"
+    networks:
+      - traefik_proxy_net
+
+  website:
+    image: nginx
+    container_name: nginxcatchum
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.website.rule=PathPrefix(`/`)"
+    networks:
+      - traefik_proxy_net
+
+  promtail:
+    image: grafana/promtail
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    volumes:
+      - "./promtail/promtail-config.yml:/etc/promtail/promtail.yaml"
+      - "./traefik/access-logs:/var/log"
+      - "./promtail/promtail-data:/tmp/positions"
+      - "./promtail/GeoLite2-City.mmdb:/etc/promtail/GeoLite2-City.mmdb"
+    networks:
+      - traefik_proxy_net
+
+  loki:
+    image: grafana/loki
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - traefik_proxy_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - "./grafana/provisioning/:/etc/grafana/provisioning"
+      - 'grafana_data:/var/lib/grafana'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.noweb.myneatodomain.com`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        # Execute the default Grafana entrypoint script
+        /run.sh
+    networks:
+      - traefik_proxy_net
+
+  catapp:
+     image: mikesir87/cats
+     container_name: catapp
+     labels:
+       - "traefik.enable=true"
+       - "traefik.http.routers.catapp.rule=Host(`catapp.noweb.myneatodomain.com`)"
+       - "traefik.http.routers.catapp.entrypoints=web"
+       - "traefik.http.routers.catapp.middlewares=test-errorpages"
+       - "traefik.http.services.catapp.loadbalancer.server.port=5000"
+       - "traefik.http.middlewares.test-errorpages.errors.status=400-599"
+       - "traefik.http.middlewares.test-errorpages.errors.service=error"
+       - "traefik.http.middlewares.test-errorpages.errors.query=/{status}.html"
+     networks:
+      - traefik_proxy_net
+
+  error:
+    image: guillaumebriday/traefik-custom-error-pages
+    container_name: errorpages
+    labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.error.rule=Host(`error.noweb.myneatodomain.com`)"
+          - "traefik.http.routers.error.service=error"
+          - "traefik.http.services.error.loadbalancer.server.port=80"
+          - "traefik.http.routers.error.entrypoints=web"
+    networks:
+      - traefik_proxy_net
+
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - 'portainer_data:/data'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.noweb.myneatodomain.com`)"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+    networks:
+      - traefik_proxy_net
+
+
+volumes:
+    grafana_data: {}
+    portainer_data: {}
+
+networks:
+  traefik2host:
+    external: true
+  traefik_proxy_net:
+    external: true
+  default:
+    driver: bridge
