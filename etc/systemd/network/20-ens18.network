@@ -1,0 +1,6 @@
+[Match]
+Name=enp0s18
+
+[Network]
+# Added the macvlan as a secondary device
+MACVLAN=traefik2docker
