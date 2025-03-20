@@ -158,6 +158,26 @@ docker network create traefik_proxy_net
 
 * * *
 
+## Place the /etc/ files in the correct location
+
+Why all the systemd network files? For a persistant network change.
+
+Again, this was a skeleton folder structure for you to find and understand. 
+
+Now the files have to go into the correct location, 
+
+```bash
+
+sudo cp -R ./etc/ /
+
+```
+
+- If that was successful, you can now remove the `/etc/` folder from your working directory.
+
+
+
+* * *
+
 ## Traefik Analytics Collected
 
 You can view Traefik logs in Grafana:
