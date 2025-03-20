@@ -1,0 +1,6 @@
+[NetDev]
+Name=traefik2docker
+Kind=macvlan
+
+[MACVLAN]
+Mode=private
