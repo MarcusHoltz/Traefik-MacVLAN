@@ -205,13 +205,16 @@ else
     echo "systemd-networkd is not enabled. Enabling it now..."
     sudo systemctl enable systemd-networkd
     echo "systemd-networkd has been enabled."
+    echo "ifupdown2's networking service must now become disabled..."
     echo -e "############################################################################################\nThis script will attempt to reboot your machine now.\n############################################################################################"; sleep .5; 
     echo -e "################      Please re-run this script after reboot finishes.      ################\n###########################################################################################"; sleep 1.5; 
-    echo "====You May Get A New IP Address Upon Reboot===="; sleep .5
+    echo "====You May Get A New IP Address Upon Reboot===="; sleep 1
     echo -e "Rebooting in 7 seconds......."; sleep 1; echo -e "Rebooting in 6 seconds......"; sleep 1; 
     echo -e "Rebooting in 5 seconds....."; sleep 1; echo -e "Rebooting in 4 seconds...."; sleep 1; 
     echo -e "Rebooting in 3 seconds..."; sleep 1; echo -e "Rebooting in 2 seconds.."; sleep 1; 
-    echo -e "Rebooting in less than 1 second."; sleep .5; echo -e "\n##############################\n    ###### REBOOTING ######\n##############################"; sleep 3; sudo reboot;
+    echo -e "Rebooting in less than 1 second."; sleep .5; echo -e "\n##############################\n    ###### REBOOTING ######\n##############################"; 
+    sudo systemctl disable networking;
+    sleep 1; sudo reboot;
 fi
 
 
@@ -270,7 +273,7 @@ done
 ####################################################
 # # This is basically a downloader for my Github repo
 # # # Verify the files for docker-compose are there
-REPO_URL="http://172.21.8.203/modified.grafana.updated/"
+REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main"
 
 # # List of directories to check/create
 directories=(
@@ -339,14 +342,12 @@ done
 
 
 
-
-
-
-
-###########################################################################################################################
-
-
+####################################################
+## Verify files needed from Maxmind are available ##
+####################################################
 # # Check for GeoLite2-City.mmdb
+# # # Warn user they didnt have the file
+# # # # Wait. Then say, eh, just download it from somewhere else
 if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
   echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
   echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
