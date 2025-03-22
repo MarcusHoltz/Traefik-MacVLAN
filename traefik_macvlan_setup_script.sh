@@ -30,8 +30,25 @@ fi
 
 # # Check for required software: Docker
 if ! command -v docker &> /dev/null; then
-  echo "Docker is not installed, please install Docker first"
-  exit 1
+  echo "Docker was no found and is required to continue. This will install docker."
+  read -p "Do you want to continue? (Y/n): " response
+
+  if [[ "$response" =~ ^[Nn]$ ]]; then
+    echo "Exiting..."
+    exit 1
+  fi
+  sudo apt update
+  sudo apt upgrade -y
+  sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+  sudo apt update
+  sudo apt install -y docker-ce
+#  sudo systemctl status docker
+ sudo usermod -aG docker $USER
+#  groups $USER | grep docker
+# # The screen could be full of update messages.
+clear
 fi
 
 # # Check for required software: Docker-Compose or Docker compose plugin
@@ -39,7 +56,6 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
   echo "Docker Compose is not installed, please install Docker Compose first."
   exit 1
 fi
-
 
 # # Load the .env file to make sure some variables are available
 if [ -f .env ]; then
@@ -235,9 +251,21 @@ fi
 ##################################################
 # # If you downloaded this repo from Github
 # # # Sample files were included in the repo for demo content
-rm ./etc/systemd/network/20-ens18.network >/dev/null 2>&1
-rm ./etc/systemd/network/25-traefik2docker.netdev >/dev/null 2>&1
-rmdir ./etc/systemd/network/ >/dev/null 2>&1
+extra_git_dir="./etc/systemd/network"
+files=(
+    "$extra_git_dir/20-ens18.network"
+    "$extra_git_dir/25-traefik2docker.netdev"
+)
+
+# Remove files if they exist
+for file in "${files[@]}"; do
+    [ -f "$file" ] && rm "$file" &>/dev/null
+done
+
+# Remove from the base of the extra git downloads directory
+[ -d "$extra_git_dir" ] && rm -r "$(echo "$extra_git_dir" | cut -d'/' -f1,2)"
+
+
 
 ####################################################
 ## Verify files needed from Github repo are there ##
@@ -320,7 +348,7 @@ echo "Environment setup complete."
 ## Run Docker-Compose ##
 ########################
 # # Download some docker images and bring up containers
-docker-compose up -d || docker compose up -d
+docker-compose up -d 2>/dev/null || docker compose up -d 2>/dev/null
 
 
 
