@@ -10,12 +10,14 @@ set -e
 echo "=== Traefik + MacVLAN Setup ==="
 echo ""
 sleep .5;
-echo "A reboot will be required if this is your first time using systemd-networkd"
-sleep .25;
-echo "   .::WARNING::     This Script Will Want to Reboot      ::WARNING::."
-echo ""
-sleep 2.25;
 
+if [ ! -f ".env" ]; then
+  echo "A reboot will be required if this is your first time using systemd-networkd"
+  sleep .25;
+  echo "   .::WARNING::     This Script Will Want to Reboot      ::WARNING::."
+  echo ""
+  sleep 3.25;
+fi
 
 # # Prompt the user for sudo even if the script isn't run with sudo
 sudo -v  # This will prompt for sudo password, but doesn't run any command
@@ -44,10 +46,8 @@ if ! command -v docker &> /dev/null; then
   echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
   sudo apt update
   sudo apt install -y docker-ce
-#  sudo systemctl status docker
- sudo usermod -aG docker $USER
-#  groups $USER | grep docker
-# # The screen could be full of update messages.
+  sudo usermod -aG docker $USER
+# # Clear the screen full of update messages
 clear
 fi
 
@@ -200,13 +200,13 @@ EOL
 # # # Device events for already existing devices need re-run at system startup, cold-plugging in the new MacVLAN
 # # # # Reboot required
 if systemctl is-enabled --quiet systemd-networkd; then
-    echo "systemd-networkd is already enabled."
+    echo "systemd-networkd is already enabled." | logger
 else
     echo "systemd-networkd is not enabled. Enabling it now..."
     sudo systemctl enable systemd-networkd
     echo "systemd-networkd has been enabled."
     echo "====You May Get A New IP Address Upon Reboot===="
-    echo -e "##################################################\nThis script will attemp to reboot your machine now.\n##################################################"; sleep .5; 
+    echo -e "####################################################\nThis script will attempt to reboot your machine now.\n####################################################"; sleep .5; 
     echo -e "Rebooting in 7 seconds......."; sleep 1.5; echo -e "Rebooting in 6 seconds......"; sleep 1.5; 
     echo -e "Rebooting in 5 seconds....."; sleep 1.5; echo -e "Rebooting in 4 seconds...."; sleep 1.5; 
     echo -e "Rebooting in 3 seconds..."; sleep 1.5; echo -e "Rebooting in 2 seconds.."; sleep 2; 
@@ -272,7 +272,6 @@ done
 ####################################################
 # # This is basically a downloader for my Github repo
 # # # Verify the files for docker-compose are there
-#!/bin/bash
 REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/"
 
 # List of directories to check/create
@@ -301,13 +300,13 @@ create_directory() {
   if [ ! -d "$dir" ]; then
     mkdir -p "$dir"
     if [ $? -eq 0 ]; then
-      echo "Successfully created directory: $dir"
+      echo "Successfully created directory: $dir" | logger
     else
-      echo "Error: Failed to create directory: $dir" >&2
+      echo "Error: Failed to create directory: $dir" | logger
       return 1
     fi
   else
-    echo "Directory already exists: $dir"
+    echo "Directory already exists: $dir" | logger
   fi
 }
 
@@ -315,32 +314,32 @@ create_directory() {
 download_file() {
   local file="$1"
   if [ ! -f "$file" ]; then
-    echo "Downloading file: $file"
+    echo "Downloading file: $file" | logger
     wget -q "$REPO_URL/$file" -O "$file"
     if [ $? -eq 0 ]; then
-      echo "Successfully downloaded file: $file"
+      echo "Successfully downloaded file: $file" | logger
     else
-      echo "Error: Failed to download file: $file" >&2
+      echo "Error: Failed to download file: $file" | logger
       return 1
     fi
   else
-    echo "File already exists: $file"
+    echo "File already exists: $file" | logger
   fi
 }
 
 # Create directories
-echo "Checking and creating directories..."
+echo "Checking and creating directories..." | logger
 for dir in "${directories[@]}"; do
   create_directory "$dir" || exit 1
 done
 
 # Download files
-echo "Checking and downloading files..."
+echo "Checking and downloading files..." | logger
 for file in "${files[@]}"; do
   download_file "$file" || exit 1
 done
 
-echo "Environment setup complete."
+echo "Environment setup complete... running Docker"
 
 
 
@@ -348,7 +347,7 @@ echo "Environment setup complete."
 ## Run Docker-Compose ##
 ########################
 # # Download some docker images and bring up containers
-docker-compose up -d 2>/dev/null || docker compose up -d 2>/dev/null
+docker compose up -d || docker-compose up -d 
 
 
 
@@ -363,14 +362,14 @@ echo "Make sure your DNS records have a wildcard record pointing to ${TRAEFIK_MA
 echo "*.${DOMAIN}"
 echo ""
 echo "Or you must create a DNS entry for the following sub-domains, pointing to: ${TRAEFIK_MACVLAN_IP}"
-echo "catapp.${DOMAIN}"
-echo "traefik.${DOMAIN}"
-echo "grafana.${DOMAIN}"
-echo "error.${DOMAIN}"
-echo "portainer.${DOMAIN}"
-echo "whoami1.${DOMAIN}"
-echo "whoami2.${DOMAIN}"
-echo "anything.${DOMAIN}"
+echo "  catapp.${DOMAIN}"
+echo "  traefik.${DOMAIN}"
+echo "  grafana.${DOMAIN}"
+echo "  error.${DOMAIN}"
+echo "  portainer.${DOMAIN}"
+echo "  whoami1.${DOMAIN}"
+echo "  whoami2.${DOMAIN}"
+echo "  anything.${DOMAIN}"
 echo ""
 echo "You can access your applications at:"
 echo "- Traefik Dashboard:    http://traefik-dashboard.${DOMAIN}"
