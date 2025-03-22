@@ -256,12 +256,12 @@ files=(
     "$extra_git_dir/25-traefik2docker.netdev"
 )
 
-# Remove files if they exist
+# # Remove files if they exist
 for file in "${files[@]}"; do
     [ -f "$file" ] && rm "$file" &>/dev/null
 done
 
-# Remove from the base of the extra git downloads directory
+# # Remove from the base of the extra git downloads directory
 [ -d "$extra_git_dir" ] && rm -r "$(echo "$extra_git_dir" | cut -d'/' -f1,2)"
 
 
@@ -273,7 +273,7 @@ done
 # # # Verify the files for docker-compose are there
 REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/"
 
-# List of directories to check/create
+# # List of directories to check/create
 directories=(
   "./traefik"
   "./promtail"
@@ -283,17 +283,17 @@ directories=(
   "./grafana/provisioning/dashboards"
 )
 
-# List of files to check/download
+# # List of files to check/download
 files=(
   "./docker-compose.yml"
   "./traefik/traefik.yml"
   "./promtail/promtail-config.yml"
   "./grafana/datasources/ds.yaml"
-  "./grafana/provisioning/dashboards/dashboard.yaml"  
+  "./grafana/provisioning/dashboards/dashboard.yaml"
   "./grafana/provisioning/dashboards/Webanalytics.json"
 )
 
-# Create a directory if it doesn't exist, do I need the messages?
+# # Create a directory if it doesn't exist, messages go to logs
 create_directory() {
   local dir="$1"
   if [ ! -d "$dir" ]; then
@@ -309,7 +309,7 @@ create_directory() {
   fi
 }
 
-# Download the files if they doesn't exist
+# # Download the files if they doesn't exist
 download_file() {
   local file="$1"
   if [ ! -f "$file" ]; then
@@ -326,17 +326,38 @@ download_file() {
   fi
 }
 
-# Create directories
+# # Create directories
 echo "Checking and creating directories..." | logger
 for dir in "${directories[@]}"; do
   create_directory "$dir" || exit 1
 done
 
-# Download files
+# # Download files
 echo "Checking and downloading files..." | logger
 for file in "${files[@]}"; do
   download_file "$file" || exit 1
 done
+
+
+# # Check for GeoLite2-City.mmdb
+if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
+  echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
+  echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
+  echo ""
+  echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
+  echo ""
+  echo "Sign up, and download: GeoLite2-City.mmdb"
+  echo "Place GeoLite2-City.mmdb in the ./promtail directory"
+  echo "Then re-run this script."
+  echo ""
+  sleep 15;
+  echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, for testing, would you like to proceed?"
+    read -p "Do you want to continue? (Y/n): " response
+    if [[ "$response" =~ ^[Nn]$ ]]; then
+      echo "Exiting..."
+      exit 1
+    fi
+fi
 
 echo "Environment setup complete... running Docker"
 
@@ -346,7 +367,7 @@ echo "Environment setup complete... running Docker"
 ## Run Docker-Compose ##
 ########################
 # # Download some docker images and bring up containers
-docker compose up -d || docker-compose up -d 
+docker compose up -d || docker-compose up -d
 
 
 
