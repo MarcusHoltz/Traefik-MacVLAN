@@ -13,8 +13,8 @@ sleep .5;
 if [ ! -f ".env" ]; then
   echo "A reboot will be required if this is your first time using systemd-networkd"
   sleep .25;
-  echo "   .::WARNING::     This Script Will Want to Reboot      ::WARNING::."
-  echo ""
+  echo "   .::WARNING::    This Script Will Want to Reboot     ::WARNING::."
+  echo " Please re-run script after reboot - reboot after script re-run pleasE"
   sleep 3.25;
 fi
 
@@ -205,7 +205,8 @@ else
     echo "systemd-networkd is not enabled. Enabling it now..."
     sudo systemctl enable systemd-networkd
     echo "systemd-networkd has been enabled."
-    echo -e "####################################################\nThis script will attempt to reboot your machine now.\n####################################################"; sleep .5; 
+    echo -e "############################################################################################\nThis script will attempt to reboot your machine now.\n############################################################################################"; sleep .5; 
+    echo -e "################      Please re-run this script after reboot finishes.      ################\n###########################################################################################"; sleep 1.5; 
     echo "====You May Get A New IP Address Upon Reboot===="; sleep .5
     echo -e "Rebooting in 7 seconds......."; sleep 1; echo -e "Rebooting in 6 seconds......"; sleep 1; 
     echo -e "Rebooting in 5 seconds....."; sleep 1; echo -e "Rebooting in 4 seconds...."; sleep 1; 
