@@ -1,0 +1,26 @@
+# Static configuration
+log:
+  level: DEBUG
+
+api:
+  insecure: true
+
+providers:
+  docker:
+    exposedByDefault: false
+
+entryPoints:
+  web:
+    address: ":80"
+
+accessLog:
+  filePath: "/opt/access-logs/access.json"
+  format: json
+  fields:
+    defaultMode: keep
+    headers:
+      defaultMode: keep
+      names:
+        User-Agent: keep
+        Referer: keep
+#        StartUTC: drop      # drop the StartUTC to put the logs in the local timezone
