@@ -205,12 +205,12 @@ else
     echo "systemd-networkd is not enabled. Enabling it now..."
     sudo systemctl enable systemd-networkd
     echo "systemd-networkd has been enabled."
-    echo "====You May Get A New IP Address Upon Reboot===="
     echo -e "####################################################\nThis script will attempt to reboot your machine now.\n####################################################"; sleep .5; 
-    echo -e "Rebooting in 7 seconds......."; sleep 1.5; echo -e "Rebooting in 6 seconds......"; sleep 1.5; 
-    echo -e "Rebooting in 5 seconds....."; sleep 1.5; echo -e "Rebooting in 4 seconds...."; sleep 1.5; 
-    echo -e "Rebooting in 3 seconds..."; sleep 1.5; echo -e "Rebooting in 2 seconds.."; sleep 2; 
-    echo -e "Rebooting in less than 1 second."; sleep 1; echo -e "\n##############################\n    ###### REBOOTING ######\n##############################"; sleep 5; sudo reboot;
+    echo "====You May Get A New IP Address Upon Reboot===="; sleep .5
+    echo -e "Rebooting in 7 seconds......."; sleep 1; echo -e "Rebooting in 6 seconds......"; sleep 1; 
+    echo -e "Rebooting in 5 seconds....."; sleep 1; echo -e "Rebooting in 4 seconds...."; sleep 1; 
+    echo -e "Rebooting in 3 seconds..."; sleep 1; echo -e "Rebooting in 2 seconds.."; sleep 1; 
+    echo -e "Rebooting in less than 1 second."; sleep .5; echo -e "\n##############################\n    ###### REBOOTING ######\n##############################"; sleep 3; sudo reboot;
 fi
 
 
