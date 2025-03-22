@@ -346,30 +346,25 @@ done
 
 
 # # Check for GeoLite2-City.mmdb
-# if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
-#   echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
-#   echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
-#   echo ""
-#   echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
-#   echo ""
-#   echo "Sign up, and download: GeoLite2-City.mmdb"
-#   echo "Place GeoLite2-City.mmdb in the ./promtail directory"
-#   echo "Then re-run this script."
-#   echo ""
-#   sleep 15
-#   echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, for testing, would you like to proceed?"
-#   read -p "Do you want to continue? (Y/n): " response
-#   if [[ "$response" =~ ^[Nn]$ ]]; then
-#     echo "Exiting..."
-#     exit 1
-#   fi
-# fi
-
-# # Check for GeoLite2-City.mmdb
-# # # This works until it doesnt, then uncomment above 
-# # # # [ ! -f "./promtail/GeoLite2-City.mmdb" ] && wget -P ./promtail https://git.io/GeoLite2-City.mmdb
 if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
-wget -P ./promtail https://git.io/GeoLite2-City.mmdb
+  echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
+  echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
+  echo ""
+  echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
+  echo ""
+  echo "Sign up, and download: GeoLite2-City.mmdb"
+  echo "Place GeoLite2-City.mmdb in the ./promtail directory"
+  echo "Then re-run this script."
+  echo ""
+  sleep 5
+  echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, would you like me to download it for you so we can proceed?"
+  read -p "Do you want to continue? (Y/n): " response
+  if [[ "$response" =~ ^[Nn]$ ]]; then
+    echo "Exiting..."
+    exit 1
+  else
+    wget -P ./promtail https://git.io/GeoLite2-City.mmdb
+  fi
 fi
 
 
