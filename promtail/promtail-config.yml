@@ -1,0 +1,74 @@
+# for a simple access log push we don't need the server capabilities 
+server:
+  disable: true
+
+# where to send the logs - our Loki server / container
+clients:
+- url: "http://loki:3100/loki/api/v1/push"
+
+# stores the file pointer inside access logs which have been sent
+positions:
+  filename: /tmp/positions/positions.yaml
+
+target_config:
+  sync_period: 10s
+
+scrape_configs:
+- job_name: traefik-logs
+  pipeline_stages:
+    # extracts json fields to make them labels
+    - json:
+        expressions:
+          client_host: ClientHost
+          user_agent: "\"request_User-Agent\""
+          request_path: RequestPath
+          DockerServiceName: "\"ServiceName\""
+    - drop:
+        source: request_path
+        expression: "/metrics"
+    - drop:
+        source: user_agent
+        expression: "Blackbox Exporter.*"
+    # uses MaxMind GeoLite2 to map IP addresses to geo locations
+    - geoip:
+        source: client_host
+        db: /etc/promtail/GeoLite2-City.mmdb
+        db_type: city
+    # drop certain geoip labels, as we are limited to 15 labels in total
+    - labeldrop:
+      - geoip_postal_code
+      - geoip_subdivision_code
+      - geoip_continent_code
+      - geoip_continent_name
+      - geoip_subdivision_name
+      - geoip_timezone
+    # uses a regex to extract the OS from the user_agent
+    - regex:
+        source: user_agent
+        expression: "(?P<OS>Windows \\w+ \\d+(?:\\.\\d+)*|Linux(?: (?:i686|x86_64))?|Macintosh|(?:CPU )?iPhone OS|CPU OS.*?like Mac OS X)"
+    # uses a regex to extract the Device type from the user_agent
+    - regex:
+        source: user_agent
+        expression: "(?P<Device>iPhone|iPad|Mobile|Android(?: \\d+(?:\\.\\d+)*))"
+    # uses a regex to extract the Browser from the user_agent
+    - regex:
+        source: user_agent
+        expression: "(?P<Browser>(MSIE|(?:Mobile )?Safari|Chrome|\\b\\w+\\b Chromium|Firefox|Version|Mobile|GSA|QuickLook|OPR)[ \\\\/](?:[A-Z\\d]+\\b|\\d+(?:\\.\\d+)*))"
+    # defines new labels from extracted fields within the pipeline processing
+    - labels:
+        client_host:
+        user_agent:
+        request_path:
+        DockerServiceName:
+        OS:
+        Device:
+        Browser:
+  # define the static labels and the filesystem location to find the
+  # log to be scraped
+  static_configs:
+  - targets:
+    - localhost
+    labels:
+      job: traefik
+      host: localhost
+      __path__: /var/log/*.json
