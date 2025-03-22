@@ -1,0 +1,157 @@
+services:
+  traefik:
+    image: traefik
+    container_name: traefik
+    ports:
+      - 80:80
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/access-logs:/opt/access-logs
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`traefik-dashboard.$DOMAIN`)
+      - traefik.http.routers.traefik.entrypoints=web
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+    networks:
+      traefik2host:
+        ipv4_address: ${TRAEFIK_MACVLAN_IP}
+      traefik_proxy_net: null
+  whoami1:
+    image: traefik/whoami
+    container_name: whoami1
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami1.rule=Host(`whoami1.$DOMAIN`)
+      - traefik.http.routers.whoami1.entrypoints=web
+    networks:
+      - traefik_proxy_net
+  whoami2:
+    image: traefik/whoami
+    container_name: whoami2
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.whoami2.rule=Host(`whoami2.$DOMAIN`)
+      - traefik.http.routers.whoami2.entrypoints=web
+    networks:
+      - traefik_proxy_net
+  website:
+    image: nginx
+    container_name: nginxcatchum
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.website.rule=PathPrefix(`/`)
+    networks:
+      - traefik_proxy_net
+  promtail:
+    image: grafana/promtail
+    container_name: promtail
+    command: -config.file=/etc/promtail/promtail.yaml
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail.yaml
+      - ./traefik/access-logs:/var/log
+      - ./promtail/promtail-data:/tmp/positions
+      - ./promtail/GeoLite2-City.mmdb:/etc/promtail/GeoLite2-City.mmdb
+    networks:
+      - traefik_proxy_net
+  loki:
+    image: grafana/loki
+    container_name: loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - traefik_proxy_net
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.grafana.service=grafana
+      - traefik.http.routers.grafana.rule=Host(`grafana.$DOMAIN`)
+      - traefik.http.routers.grafana.entrypoints=web
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        # Execute the default Grafana entrypoint script
+        /run.sh
+    ports:
+      - 3000:3000
+    networks:
+      - traefik_proxy_net
+  catapp:
+    image: mikesir87/cats
+    container_name: catapp
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.catapp.rule=Host(`catapp.$DOMAIN`)
+      - traefik.http.routers.catapp.entrypoints=web
+      - traefik.http.routers.catapp.middlewares=test-errorpages
+      - traefik.http.services.catapp.loadbalancer.server.port=5000
+      - traefik.http.middlewares.test-errorpages.errors.status=400-599
+      - traefik.http.middlewares.test-errorpages.errors.service=error
+      - traefik.http.middlewares.test-errorpages.errors.query=/{status}.html
+    networks:
+      - traefik_proxy_net
+  error:
+    image: guillaumebriday/traefik-custom-error-pages
+    container_name: errorpages
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.error.rule=Host(`error.$DOMAIN`)
+      - traefik.http.routers.error.service=error
+      - traefik.http.services.error.loadbalancer.server.port=80
+      - traefik.http.routers.error.entrypoints=web
+    networks:
+      - traefik_proxy_net
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.portainer.rule=Host(`portainer.$DOMAIN`)
+      - traefik.http.routers.portainer.service=portainer
+      - traefik.http.routers.portainer.entrypoints=web
+      - traefik.http.services.portainer.loadbalancer.server.port=9000
+    networks:
+      - traefik_proxy_net
+volumes:
+  grafana_data: {}
+  portainer_data: {}
+networks:
+  traefik2host:
+    external: true
+  traefik_proxy_net:
+    external: true
+  default:
+    driver: bridge
