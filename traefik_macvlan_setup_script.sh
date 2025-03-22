@@ -133,10 +133,11 @@ MACVLAN=traefik2docker" | sudo tee "$HOST_INTERFACE_SYSTEMD_FILE" > /dev/null
 ### Prompt for configuration ###
 #################################
 # # Prompt user for the new interface name, or defaults to host_network
-echo -e "Renaming the host interface responsible for the MacVLAN\n------------------------------------------\nType in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
 ###### Prompt 2 ###### -- RENAME HOST INTERFACE
+echo -e "Renaming the host interface responsible for the MacVLAN\n########## This--must--begin--with--a--letter ##########\nType in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
   read -p "Enter interface name: " HOST_INTERFACE_NEW
     HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW:-host_network}
+
 
 MACaddr=$(ip link show $(echo "$HOST_INTERFACE") | grep -o -E ..:..:..:..:..:.. | head -n 1) && sudo bash -c "cat <<EOF > /etc/systemd/network/10-$(echo "$HOST_INTERFACE")-renamed-$(echo "$HOST_INTERFACE_NEW").link
 [Match]
@@ -268,7 +269,7 @@ done
 ####################################################
 # # This is basically a downloader for my Github repo
 # # # Verify the files for docker-compose are there
-REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main"
+REPO_URL="http://172.21.8.203/modified.grafana.updated/"
 
 # # List of directories to check/create
 directories=(
