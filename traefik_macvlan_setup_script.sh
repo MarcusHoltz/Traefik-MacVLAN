@@ -268,7 +268,7 @@ done
 ####################################################
 # # This is basically a downloader for my Github repo
 # # # Verify the files for docker-compose are there
-REPO_URL="http://172.21.8.203/modified.grafana.updated/"
+REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main"
 
 # # List of directories to check/create
 directories=(
