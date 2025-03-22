@@ -241,10 +241,6 @@ fi
 ###########################################
 
 
-
-
-
-
 ##################################################
 ## Clean up files if you downloaded from Github ##
 ##################################################
@@ -266,21 +262,22 @@ done
 
 
 
+
 ####################################################
 ## Verify files needed from Github repo are there ##
 ####################################################
 # # This is basically a downloader for my Github repo
 # # # Verify the files for docker-compose are there
-REPO_URL="https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/"
+REPO_URL="http://172.21.8.203/modified.grafana.updated/"
 
 # # List of directories to check/create
 directories=(
   "./traefik"
   "./promtail"
   "./grafana"
-  "./grafana/datasources"
   "./grafana/provisioning"
   "./grafana/provisioning/dashboards"
+  "./grafana/provisioning/datasources"
 )
 
 # # List of files to check/download
@@ -288,7 +285,7 @@ files=(
   "./docker-compose.yml"
   "./traefik/traefik.yml"
   "./promtail/promtail-config.yml"
-  "./grafana/datasources/ds.yaml"
+  "./grafana/provisioning/datasources/ds.yaml"
   "./grafana/provisioning/dashboards/dashboard.yaml"
   "./grafana/provisioning/dashboards/Webanalytics.json"
 )
@@ -339,28 +336,44 @@ for file in "${files[@]}"; do
 done
 
 
+
+
+
+
+
+###########################################################################################################################
+
+
 # # Check for GeoLite2-City.mmdb
+# if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
+#   echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
+#   echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
+#   echo ""
+#   echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
+#   echo ""
+#   echo "Sign up, and download: GeoLite2-City.mmdb"
+#   echo "Place GeoLite2-City.mmdb in the ./promtail directory"
+#   echo "Then re-run this script."
+#   echo ""
+#   sleep 15
+#   echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, for testing, would you like to proceed?"
+#   read -p "Do you want to continue? (Y/n): " response
+#   if [[ "$response" =~ ^[Nn]$ ]]; then
+#     echo "Exiting..."
+#     exit 1
+#   fi
+# fi
+
+# # Check for GeoLite2-City.mmdb
+# # # This works until it doesnt, then uncomment above 
+# # # # [ ! -f "./promtail/GeoLite2-City.mmdb" ] && wget -P ./promtail https://git.io/GeoLite2-City.mmdb
 if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
-  echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
-  echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
-  echo ""
-  echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
-  echo ""
-  echo "Sign up, and download: GeoLite2-City.mmdb"
-  echo "Place GeoLite2-City.mmdb in the ./promtail directory"
-  echo "Then re-run this script."
-  echo ""
-  sleep 15;
-  echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, for testing, would you like to proceed?"
-    read -p "Do you want to continue? (Y/n): " response
-    if [[ "$response" =~ ^[Nn]$ ]]; then
-      echo "Exiting..."
-      exit 1
-    fi
+wget -P ./promtail https://git.io/GeoLite2-City.mmdb
 fi
 
-echo "Environment setup complete... running Docker"
 
+
+echo "Environment setup complete... running Docker"
 
 
 ########################
