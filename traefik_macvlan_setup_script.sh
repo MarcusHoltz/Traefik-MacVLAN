@@ -8,7 +8,6 @@ set -e
 
 # # Warn user about the script they're running and what they're getting into
 echo "=== Traefik + MacVLAN Setup ==="
-echo ""
 sleep .5;
 
 if [ ! -f ".env" ]; then
