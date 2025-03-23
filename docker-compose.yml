@@ -4,9 +4,6 @@ services:
     container_name: traefik
     env_file:
       - .env
-    ports:
-      - "80:80"
-      - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - ./traefik/access-logs:/opt/access-logs
@@ -103,8 +100,6 @@ services:
       - |
         # Execute the default Grafana entrypoint script
         /run.sh
-    ports:
-      - "3000:3000"
     networks:
       - traefik_proxy_net
 
