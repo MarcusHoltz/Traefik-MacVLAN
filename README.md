@@ -7,6 +7,13 @@ For a complete yet simple example, visit https://github.com/oglimmer/traefik-lok
 
 For the full guide that goes along with this repo, visit [https://blog.holtzweb.com](#urlhere).
 
+## Demo 
+
+![Traefik Docker MacVLAN Demo of Script Running](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/traefik_docker_macvlan_demo.gif)
+
+* * *
+
+
 ## Geo Location Lookup File Needed
 
 - You must copy this file: `GeoLite2-City.mmdb`
