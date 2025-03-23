@@ -19,7 +19,8 @@ if [ ! -f ".env" ]; then
 fi
 
 # # Prompt the user for sudo even if the script isn't run with sudo
-sudo -v  # This will prompt for sudo password, but doesn't run any command
+# # # This will prompt for sudo password, but doesn't run any command
+sudo -v  
 
 
 # # Check if running as root
@@ -86,7 +87,7 @@ echo "DOMAIN is set to:  $DOMAIN"
   HOST_IP=$(ip -o -f inet addr show | awk '/scope global/ {print $4}' | head -n 1 | sed 's/...$//')
   HOST_GATEWAY=$(ip route | awk '/default/ { print $3 }')
   HOST_INTERFACE=$(ip route | awk '/default/ { print $5 }')
-  HOST_INTERFACE_MATCH=$(ip a | awk '/altname/ { print $2 }')
+#  HOST_INTERFACE_MATCH=$(ip a | awk '/altname/ { print $2 }')
   HOST_SUBNET=$(ip route | awk "/$HOST_INTERFACE/" | awk '/kernel scope link/ { print $1 }')
 
 
@@ -108,6 +109,10 @@ Mode=private" | sudo tee "$HOST_MACVLAN_SYSTEMD_FILE" > /dev/null
 
 
 
+
+
+
+
 ###################################################
 ## Check for pre-configured files, before reboot ##
 ###################################################
@@ -118,6 +123,21 @@ if [[ -z "${BOOLEAN_INTERFACE_RENAME_FILE}" ]]; then
 # # THIS SECTION EXECUTES - if - this is pre-reboot, first time running script.
 # # # Create the Host Interface network file if this is the first time being networkd is being ran
 HOST_INTERFACE_SYSTEMD_FILE="/etc/systemd/network/20-$(echo "$HOST_INTERFACE").network"
+
+
+###### I need to check to see if this is a specific virtual environment
+# # # Check if virt-what is installed, then install it
+sudo virt-what > /dev/null 2>&1 || sudo apt install virt-what > /dev/null 2>&1
+
+# # Run virt-what and check for LXC
+# # # If system is running in LXC container, it wont have an altname on it's interface
+if sudo virt-what | grep -q "lxc"; then
+    HOST_INTERFACE_MATCH="$HOST_INTERFACE"
+else
+# # System is not running in LXC container
+# # # Find the interface altname
+    HOST_INTERFACE_MATCH=$(ip a | awk '/altname/ { print $2 }')
+fi
 
 # # # Create the network interface file for the additional macvlan
 echo "[Match]
@@ -185,7 +205,7 @@ HOST_SUBNET=${HOST_SUBNET}
 HOST_INTERFACE=${HOST_INTERFACE}
 HOST_INTERFACE_MATCH=${HOST_INTERFACE_MATCH}
 HOST_INTERFACE_SYSTEMD_FILE=${HOST_INTERFACE_SYSTEMD_FILE}
-HOST_INTERFACE_RENAME_FILE=${HOST_INTERFACE_RENAME_FILE}
+BOOLEAN_INTERFACE_RENAME_FILE=${BOOLEAN_INTERFACE_RENAME_FILE}
 HOST_MACVLAN_SYSTEMD_FILE=${HOST_MACVLAN_SYSTEMD_FILE}
 HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW}
 TRAEFIK_MACVLAN_IP=${TRAEFIK_MACVLAN_IP}
