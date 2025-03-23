@@ -234,9 +234,18 @@ else
     echo -e "Rebooting in 3 seconds..."; sleep 1; echo -e "Rebooting in 2 seconds.."; sleep 1; 
     echo -e "Rebooting in less than 1 second."; sleep .5; echo -e "\n##############################\n    ###### REBOOTING ######\n##############################"; 
     sudo systemctl disable networking;
+    sudo systemctl disable ifupdown-wait-online.service
     sleep 1; sudo reboot;
 fi
 
+
+
+#########################
+## Post reboot section ##
+#########################
+# # I had to find what was causing a 5min hang on docker:           systemctl list-dependencies docker.service
+# # # You removed Debian's network daemon, but you didnt remove:    ifupdown-wait-online.service
+# # # # It would be nice to add a section detailing how to use:     nftables
 
 
 #######################################################################
@@ -370,16 +379,11 @@ done
 # # # # Wait. Then say, eh, just download it from somewhere else
 if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
   echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
-  echo "You still need GeoLite2-City.mmdb downloaded before running Docker"
+  echo "You need GeoLite2-City.mmdb downloaded before running Docker!"
+  echo "#############################################################"
   echo ""
-  echo "Please visit: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data"
-  echo ""
-  echo "Sign up, and download: GeoLite2-City.mmdb"
-  echo "Place GeoLite2-City.mmdb in the ./promtail directory"
-  echo "Then re-run this script."
-  echo ""
-  sleep 5
-  echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nBut, would you like me to download it for you so we can proceed?"
+  sleep 1.5
+  echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nWould you like me to automatically download it for you so we can proceed?"
   read -p "Do you want to continue? (Y/n): " response
   if [[ "$response" =~ ^[Nn]$ ]]; then
     echo "Exiting..."
