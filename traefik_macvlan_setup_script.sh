@@ -5,7 +5,7 @@
 ## Script Begins Warning/Checks ##
 ##################################
 
-#  [main] -- Display script banner and initial warning
+#  [main] -- Display script banner, delay, and initial warning
 display_banner() {
     echo "=== Traefik + MacVLAN Setup ==="
     sleep 0.5
@@ -28,7 +28,7 @@ display_banner() {
 check_prerequisites() {
     # Prompt for sudo password
     sudo -v
-    
+
     # Check if running as root
     if [ "$EUID" -eq 0 ]; then
         echo "Please do not run this script as root, it will use sudo when necessary"
@@ -84,8 +84,6 @@ configure_domain() {
         echo "Enter Full Domain -- example: (subdomain1.example.com)"
         read -p "Enter domain name: " DOMAIN
     fi
-    
-#    echo "DOMAIN is set to:  $DOMAIN"
 }
 
 
@@ -550,86 +548,3 @@ echo "    # Run Docker Compose"
 main
 
 # # Have a great day! :)
-
-
-# +----------------------------------------------------+
-# |                  Script Execution Start            |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +---------------------+     |     +-------------------+
-# |  Display Banner     |-----+---->| Check Prerequisites|
-# |  - Initial warnings |           | - Sudo validation  |
-# +---------------------+           | - Docker checks    |
-#                                   | - .env loading     |
-#                                   +-------------------+
-# +-----------------------------+               |
-# | Check for Domain Name       |               |
-# | - Prompt if not in .env     |<--------------+
-# +-----------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Gather Network Information                         |
-# | - IP, gateway, interface, subnet detection         |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Check/Create/Modify Systemd Network Files          | 
-# | - Create macvlan netdev file                       |
-# | - Modify for existing interface rename              |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +------------------+        +------------------+
-# | Pre-Reboot Path  |        | Post-Reboot Path |
-# | - virt-check     |        | - Get new iface  |
-# | - Create network |        +------------------+
-# | - Rename prompt  |                  |
-# +------------------+                  |
-#           |                           |
-#           v                           v
-# +------------------------------+    +-----------------------------+
-# | Setup Traefik's MacVLAN IP   |    | Continue to Docker Setup    |
-# | - Auto MacVLAN IP assignment |    +-----------------------------+
-# | - No IP match = prompt for 1 |                  |
-# +------------------------------+                  |
-#                             |                     |
-#                             v                     v
-# +----------------------------------------------------+
-# | Update .env File                                   |
-# | - Save all collected variables                     |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Handle Reboot Requirements                         |
-# | - Check systemd-networkd - not enabled, reboot     |
-# | - If needed: run countdown & reboot                |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Docker Network Setup                               |
-# | - Create traefik_proxy_net & traefik2host networks |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Cleanup & Verification                             |
-# | - Remove sample files                              |
-# | - Download required configs                        |
-# | - Check GeoLite database                           |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# | Run Docker Compose                                 |
-# | - Bring up Traefik stack                           |
-# +----------------------------------------------------+
-#                             |
-#                             v
-# +----------------------------------------------------+
-# |                     Script Complete                |
-# +----------------------------------------------------+
