@@ -188,7 +188,7 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 * * *
 * * *
 
-## I took a the steps below and converted them - Now they're the script above
+## I took the steps below and converted them - Now they're the script above
 
 * * *
 
