@@ -69,8 +69,8 @@ Oh look there, yes, `Debian 12`. You may find a path to do this with other metho
 
 * * *
 
-> ::Information about MacVLAN: All ports are exposed by MacVLAN.
-> This is fine when Traefik is only serving 80 and 443, but this setup includes port 8080.
+> ::Information about MacVLAN:: **All ports** are **exposed** by MacVLAN.
+> This is fine when Traefik is only serving `80` and `443`, but this setup includes port `8080`.
 > Additionally, you may want to secure your Traefik metric endpoints, like, `/metrics` or `/stats` with an ipWhitelist.
 
 
@@ -179,9 +179,7 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 * * *
 * * *
 
-## I took a the steps below and converted them 
-
-### Now they're the script above
+## I took a the steps below and converted them - Now they're the script above
 
 * * *
 
