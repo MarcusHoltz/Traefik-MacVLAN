@@ -104,7 +104,7 @@ gather_network_info() {
 # Generate systemd macvlan network configuration file #
 #######################################################
 
-#  [main] -- his one can clobber, the MacVLAN names dont change
+#  [main] -- this one can clobber, the MacVLAN names dont change
 generate_macvlan_systemd_network_file() {
     # Create the macvlan netdev file
     HOST_MACVLAN_SYSTEMD_FILE="/etc/systemd/network/25-traefik2docker.netdev"
