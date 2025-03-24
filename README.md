@@ -183,6 +183,21 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 ```
 
 
+* * *
+
+## Screen Shots
+
+
+![Traefik Access Logs in Grafana](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/traefik_docker_macvlan_6--grafana-analytics.png)
+
+
+
+![Grafana Dashboard zoomed out](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/traefik_docker_macvlan_8--grafana-analytics-dashboard.png)
+
+
+
+
+
 
 * * *
 * * *
