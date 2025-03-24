@@ -19,7 +19,7 @@ a/k/a Required Software Install and System State Assumptions
 
 ## Install Script
 
-The only requirement stated at the begining of this is Debian 12. The rest of the script covers all materials needed to have a host to docker MacVLAN network for Traefik's access log, generating analytics with Promtail/Loki/Grafana.
+The only requirement is Debian 12. The rest of the script covers all materials needed to have a MacVLAN on the host interface to docker's MacVLAN network for Traefik's access log, generating analytics with Promtail/Loki/Grafana.
 
 
 * * *
