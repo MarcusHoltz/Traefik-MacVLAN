@@ -1,7 +1,6 @@
 # Setting Up Docker MacVLAN Network for Traefik's Access Log Analytics from Promtail/Loki/Grafana: A Comprehensive Guide
 
-I am working to pass the source IPs coming in to the containers in docker. As far as I understand this is not possible in bridge mode.
-It is possible with a MacVLAN.
+I am working to pass the source IPs coming in to the containers in docker. I do not want to use host, and as far as I understand this is not possible in bridge mode. It is possible with a MacVLAN.
 
 For a complete yet simple example, visit https://github.com/oglimmer/traefik-loki-grafana-web-analytics.
 
@@ -11,8 +10,191 @@ For the full guide that goes along with this repo, visit [https://blog.holtzweb.
 
 ![Traefik Docker MacVLAN Demo of Script Running](https://raw.githubusercontent.com/MarcusHoltz/marcusholtz.github.io/refs/heads/main/assets/img/posts/traefik_docker_macvlan_demo.gif)
 
+
+
+# Pre-Setup 
+
+a/k/a Required Software Install and System State Assumptions
+
+
+## Install Script
+
+The only requirement stated at the begining of this is Debian 12. The rest of the script covers all materials needed to have a host to docker MacVLAN network for Traefik's access log, generating analytics with Promtail/Loki/Grafana.
+
+
 * * *
 
+### System Requirements
+
+Make sure this is a Debian 12 system you're working with. I dont think I have mentioned this at all?
+
+
+#### Debian 12 only
+
+Oh look there, yes, `Debian 12`. You may find a path to do this with other methods, but out of the box LXC or VM - we're going with **Debian**.
+
+
+* * *
+
+### Script Features
+
+- **Automated Traefik + MacVLAN Setup:** Configures Traefik with a MacVLAN Docker network for simplified reverse proxy.
+
+- **Docker Installation** (Optional): Installs Docker if not already present on the system.
+
+- **Automatic Network Information Gathering:** Detects and stores host network details (IP, gateway, subnet).
+
+- **Systemd-Networkd Integration:** Generates and applies systemd network configuration files for MacVLAN support.
+
+- **ifupdown networking disable**: Disables ifupdown2 networking if systemd-networkd is enabled.
+
+- **Context-Aware Configuration**: Adapts its configuration steps based on whether it is running before or after a system reboot, ensuring proper setup in either scenario.
+
+- **LXC virtualization check**: Will alter the script depending on the virtual environment.
+
+- **Dynamic IP Assignment:** Automatically assigns an IP address to the Traefik MacVLAN for access.
+
+- **Docker Network Management:** Creates `traefik_proxy_net` for Docker container communication and `traefik2host` for Traefik's personal MacVLAN.
+
+- **Configuration File Management:** Verifies, downloads, and sets up necessary configuration files for Traefik, Promtail, and Grafana.
+
+- **Docker Compose Deployment:** Deploys the entire Traefik stack using Docker Compose.
+
+- **Informational Output**: Provides post-configuration instructions, including DNS record setup and application access URLs, to guide the user.
+
+
+* * *
+
+## MacVLAN WARNING!!
+
+* * *
+
+> Information about MacVLAN: All ports are exposed by MacVLAN. This is fine when Traefik is only serving 80 and 443, but that includes port 8080. Additionally, you may want to secure your Traefik metric endpoints, like, `/metrics` or `/stats` with an ipWhitelist.
+
+
+
+* * *
+* * *
+
+# Install
+
+To run the script from the command line directly:
+
+```bash
+
+wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/traefik_macvlan_setup_script.sh && clear | bash
+
+```
+
+
+# Script Breakdown
+
+
+## Horizontal Script Breakdown
+
+- Banner --> Check System --> Network Info --> Systemd Networkd files --> Pre-Reboot
+
+- Pre-Boot --> Get Traefik's MacVLAN IP Address --> Create .env --> Reboot --> Post-Reboot
+
+- Post-Reboot --> New IP --> Create Docker Network --> Create/Verify Github Files --> Run Docker Compose
+
+- Run Docker Compose --> Brings up Traefik --> Dashboard of DNS entries is printed to the screen
+
+
+## Vertical Script Breakdown
+
+```text
++----------------------------------------------------+
+|                  Script Execution Start            |
++----------------------------------------------------+
+                            |
+                            v
++---------------------+     |     +-------------------+
+|  Display Banner     |-----+---->| Check Prerequisites|
+|  - Initial warnings |           | - Sudo validation  |
++---------------------+           | - Docker checks    |
+                                  | - .env loading     |
+                                  +-------------------+
++-----------------------------+               |
+| Check for Domain Name       |               |
+| - Prompt if not in .env     |<--------------+
++-----------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Gather Network Information                         |
+| - IP, gateway, interface, subnet detection         |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Check/Create/Modify Systemd Network Files          | 
+| - Create macvlan netdev file                       |
+| - Modify for existing interface rename              |
++----------------------------------------------------+
+                            |
+                            v
++------------------+        +------------------+
+| Pre-Reboot Path  |        | Post-Reboot Path |
+| - virt-check     |        | - Get new iface  |
+| - Create network |        +------------------+
+| - Rename prompt  |                  |
++------------------+                  |
+          |                           |
+          v                           v
++------------------------------+    +-----------------------------+
+| Setup Traefik's MacVLAN IP   |    | Continue to Docker Setup    |
+| - Auto MacVLAN IP assignment |    +-----------------------------+
+| - No IP match = prompt for 1 |                  |
++------------------------------+                  |
+                            |                     |
+                            v                     v
++----------------------------------------------------+
+| Update .env File                                   |
+| - Save all collected variables                     |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Handle Reboot Requirements                         |
+| - Check systemd-networkd - not enabled, reboot     |
+| - If needed: run countdown & reboot                |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Docker Network Setup                               |
+| - Create traefik_proxy_net & traefik2host networks |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Cleanup & Verification                             |
+| - Remove sample files                              |
+| - Download required configs                        |
+| - Check GeoLite database                           |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+| Run Docker Compose                                 |
+| - Bring up Traefik stack                           |
++----------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------+
+|                     Script Complete                |
++----------------------------------------------------+
+```
+
+
+
+* * *
+* * *
+
+## I took a the steps below and converted them to the automated and reusable script above
+
+* * *
 
 ## Geo Location Lookup File Needed
 
