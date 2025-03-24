@@ -1,5 +1,10 @@
 #!/bin/bash
 
+
+##################################
+## Script Begins Warning/Checks ##
+##################################
+
 #  [main] -- Display script banner and initial warning
 display_banner() {
     echo "=== Traefik + MacVLAN Setup ==="
@@ -13,6 +18,11 @@ display_banner() {
         sleep 3
     fi
 }
+
+
+####################################
+## No Root! Yes Docker! Sudo now! ##
+####################################
 
 #  [main] -- Check all prerequisites before proceeding
 check_prerequisites() {
@@ -63,6 +73,11 @@ install_docker() {
     sudo usermod -aG docker $USER
 }
 
+
+###################################################
+## Prompt for configuration - Domain name to use ##
+###################################################
+
 #  [main] -- Configure the domain name
 configure_domain() {
     if [ -z "$DOMAIN" ]; then
@@ -72,6 +87,11 @@ configure_domain() {
     
 #    echo "DOMAIN is set to:  $DOMAIN"
 }
+
+
+#####################################
+## Save networking info for script ##
+#####################################
 
 #  [main] -- Gather host network information for configuration
 gather_network_info() {
@@ -101,8 +121,6 @@ Mode=private" | sudo tee "$HOST_MACVLAN_SYSTEMD_FILE" > /dev/null
 }
 
 
-
-
 ########################################################
 # Check/create/modify systemd-networkd interface files #
 ########################################################
@@ -120,7 +138,7 @@ configure_host_interface_systemd_files() {
     fi
 }
 
-# Used in [configure_host_interface_systemd_files] -- Configure systemd network settings before reboot
+# Used in [configure_host_interface_systemd_files] -- Configures systemd's interface for the host network settings
 configure_prereboot_systemd_network() {
     # Create host interface network file
     HOST_INTERFACE_SYSTEMD_FILE="/etc/systemd/network/20-$(echo "$HOST_INTERFACE").network"
@@ -140,6 +158,11 @@ MACVLAN=traefik2docker" | sudo tee "$HOST_INTERFACE_SYSTEMD_FILE" > /dev/null
     prompt_interface_rename
 }
 
+
+######################################################
+## LXC still using host resources, small adjustment ##
+######################################################
+
 # Used in [configure_prereboot_systemd_network] -- Checks if system is running in virtualization
 check_virtualization() {
     # Check if virt-what is installed, then install it
@@ -153,6 +176,11 @@ check_virtualization() {
         HOST_INTERFACE_MATCH=$(ip a | awk '/altname/ { print $2 }')
     fi
 }
+
+
+##############################################################
+## Prompt for configuration - Host network interface's name ##
+##############################################################
 
 # Used in [configure_prereboot_systemd_network] -- Prompt for interface rename, this doesnt need to be a choice, but I made it a nonmandatory one.
 prompt_interface_rename() {
@@ -174,6 +202,11 @@ EOF"
     sudo sed -i '/\[Network\]/a DHCP=yes' /etc/systemd/network/20-$(echo "$HOST_INTERFACE").network
 }
 
+
+###############################################
+## Obtain a free IP for Traefik's MacVLAN IP ##
+###############################################
+
 #  [main] -- Setup MacVLAN IP address for Traefik - This will find your IP, and try and add increment two digits in the last octet. Ping checks to see was the IP is taken
 setup_macvlan_ip() {
     # Attempt auto-assignment of IP
@@ -184,6 +217,11 @@ setup_macvlan_ip() {
         TRAEFIK_MACVLAN_IP=$(echo "$HOST_IP" | awk -F '.' '{print $1 "." $2 "." $3 "." $4+2}') >/dev/null 2>&1
     fi
 }
+
+
+#########################################
+## Dump current env var values to file ##
+#########################################
 
 #  [main] -- Create or update .env file with current settings
 update_env_file() {
@@ -202,6 +240,11 @@ HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW}
 TRAEFIK_MACVLAN_IP=${TRAEFIK_MACVLAN_IP}
 EOL
 }
+
+
+########################################################
+## New IP - countdown_and_reboot - disable networking ##
+########################################################
 
 #  [main] -- Handle systemd-networkd activation and reboot if needed
 handle_reboot() {
@@ -247,6 +290,11 @@ countdown_and_reboot() {
     sudo reboot
 }
 
+
+###############################
+## Establish Docker Networks ##
+###############################
+
 #  [main] -- Setup Docker networks
 setup_docker_networks() {
     # Create traefik_proxy_net if it doesn't exist
@@ -265,9 +313,17 @@ setup_docker_networks() {
     fi
 }
 
+
+
 ############ END CONFIGURATION ############
 ###########################################
 ########## BEGIN FILE MANAGEMENT ##########
+
+
+
+##################################################################################################################################
+## If you downloaded this repo from Github I left some example files up, you dont need them - this should, cleanly, remove them ##
+##################################################################################################################################
 
 #  [main] -- Clean up extra files from GitHub download
 cleanup_github_files() {
@@ -294,6 +350,11 @@ cleanup_github_files() {
         fi
     fi
 }
+
+
+#########################################################
+## If you didnt download this from Github, it will now ##
+#########################################################
 
 #  [main] -- Verify and download required files
 verify_required_files() {
@@ -365,6 +426,11 @@ download_file() {
     fi
 }
 
+
+########################################
+## Reqired File - Up to Date Download ##
+########################################
+
 #  [main] -- Check for GeoLite2 database and download if missing
 check_geolite_db() {
     if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
@@ -384,11 +450,21 @@ check_geolite_db() {
     fi
 }
 
+
+################################################
+## Bake your recipe - now with Docker Compose ## 
+################################################
+
 #  [main] -- Run Docker Compose
 run_docker_compose() {
     echo "Environment setup complete... running Docker"
     docker compose up -d || docker-compose up -d
 }
+
+
+######################
+## Dashboard of DNS ##
+######################
 
 #  [main] -- Prints out reminders to the user on what may need to be done next and what was accomplished
 congratulations_and_reminders() {
@@ -416,6 +492,11 @@ echo "- Whoami1 Page:         http://whoami1.${DOMAIN}"
 echo "- Whoami2 Page:         http://whoami2.${DOMAIN}"
 echo "- Nginx Catch All:      http://anything.${DOMAIN}"
 }
+
+
+################################
+## Run the Functions in Order ##
+################################
 
 # Main function to orchestrate the entire process
 main() {
