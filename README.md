@@ -42,7 +42,7 @@ Oh look there, yes, `Debian 12`. You may find a path to do this with other metho
 
 - **Docker Installation** (Optional): Installs Docker if not already present on the system.
 
-- **Automatic Network Information Gathering:** Detects and stores host network details (IP, gateway, subnet).
+- **Automatic Network Information:** Detects and stores host network details (IP, gateway, subnet).
 
 - **Systemd-Networkd Integration:** Generates and applies systemd network configuration files for MacVLAN support.
 
@@ -69,11 +69,12 @@ Oh look there, yes, `Debian 12`. You may find a path to do this with other metho
 
 * * *
 
-> Information about MacVLAN: All ports are exposed by MacVLAN. This is fine when Traefik is only serving 80 and 443, but that includes port 8080. Additionally, you may want to secure your Traefik metric endpoints, like, `/metrics` or `/stats` with an ipWhitelist.
+> ::Information about MacVLAN: All ports are exposed by MacVLAN.
+> This is fine when Traefik is only serving 80 and 443, but this setup includes port 8080.
+> Additionally, you may want to secure your Traefik metric endpoints, like, `/metrics` or `/stats` with an ipWhitelist.
 
 
 
-* * *
 * * *
 
 # Install
@@ -82,26 +83,12 @@ To run the script from the command line directly:
 
 ```bash
 
-wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/traefik_macvlan_setup_script.sh && clear | bash
+wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/heads/main/traefik_macvlan_setup_script.sh | bash
 
 ```
 
 
 # Script Breakdown
-
-
-## Horizontal Script Breakdown
-
-- Banner --> Check System --> Network Info --> Systemd Networkd files --> Pre-Reboot
-
-- Pre-Boot --> Get Traefik's MacVLAN IP Address --> Create .env --> Reboot --> Post-Reboot
-
-- Post-Reboot --> New IP --> Create Docker Network --> Create/Verify Github Files --> Run Docker Compose
-
-- Run Docker Compose --> Brings up Traefik --> Dashboard of DNS entries is printed to the screen
-
-
-## Vertical Script Breakdown
 
 ```text
 +----------------------------------------------------+
@@ -192,7 +179,9 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 * * *
 * * *
 
-## I took a the steps below and converted them to the automated and reusable script above
+## I took a the steps below and converted them 
+
+### Now they're the script above
 
 * * *
 
