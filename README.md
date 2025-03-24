@@ -126,7 +126,7 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 +----------------------------------------------------+
 | Check/Create/Modify Systemd Network Files          | 
 | - Create macvlan netdev file                       |
-| - Modify for existing interface rename              |
+| - Modify for existing interface rename             |
 +----------------------------------------------------+
                             |
                             v
@@ -154,7 +154,6 @@ wget -O - https://raw.githubusercontent.com/MarcusHoltz/Traefik-MacVLAN/refs/hea
 +----------------------------------------------------+
 | Handle Reboot Requirements                         |
 | - Check systemd-networkd - not enabled, reboot     |
-| - If needed: run countdown & reboot                |
 +----------------------------------------------------+
                             |
                             v
