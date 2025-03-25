@@ -515,6 +515,9 @@ echo "    # Gather network information"
     
 echo "    # Generate macvlan systemd network file"
     generate_macvlan_systemd_network_file
+
+echo "    # Generate host interface systemd network file"
+    configure_host_interface_systemd_files
     
 echo "    # Setup MacVLAN IP"
     setup_macvlan_ip
