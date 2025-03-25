@@ -286,6 +286,7 @@ countdown_and_reboot() {
     sudo systemctl disable ifupdown-wait-online.service
     sleep 1
     sudo reboot
+    sleep 5;
 }
 
 
