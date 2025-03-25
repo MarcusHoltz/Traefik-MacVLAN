@@ -530,19 +530,19 @@ echo "    # Handle reboot if needed"
     handle_reboot
     
 echo "    # Setup Docker networks"
-    setup_docker_networks
+    setup_docker_networks 1>/dev/null
     
 echo "    # Clean up extra files"
-    cleanup_github_files
+    cleanup_github_files 1>/dev/null
     
 echo "    # Verify and download required files"
-    verify_required_files
+    verify_required_files 1>/dev/null
     
 echo "    # Check for GeoLite2 database"
-    check_geolite_db
+    check_geolite_db 1>/dev/null
     
 echo "    # Run Docker Compose"
-    run_docker_compose
+    run_docker_compose 1>/dev/null
 
 #echo "    # Displays a little board reminding of all DNS"
     congratulations_and_reminders
