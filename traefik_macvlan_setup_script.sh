@@ -183,7 +183,7 @@ check_virtualization() {
 
 # Used in [configure_prereboot_systemd_network] -- Prompt for interface rename, this doesnt need to be a choice, but I made it a nonmandatory one.
 prompt_interface_rename() {
-    echo -e "      # Rename the host interface responsible for the MacVLAN\n        # Interface must begin with a letter ##########\n      # Type in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
+    echo -e "      # Rename the host interface responsible for the MacVLAN\n        # Interface must begin with a letter\n      # Type in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
     read -p "  Enter interface name: " HOST_INTERFACE_NEW
     HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW:-host_network}
     
