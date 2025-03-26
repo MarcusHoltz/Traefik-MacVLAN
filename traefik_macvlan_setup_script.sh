@@ -251,7 +251,7 @@ handle_reboot() {
         echo "systemd-networkd is already enabled." | logger
     else
         echo "systemd-networkd is not enabled. Enabling it now..."
-        sudo systemctl enable systemd-networkd
+        sudo systemctl enable systemd-networkd 1>/dev/null
         echo "systemd-networkd has been enabled."
         echo "ifupdown2's networking service must now become disabled..."
         echo -e "############################################################################################\nThis script will attempt to reboot your machine now.\n############################################################################################"
@@ -434,6 +434,7 @@ download_file() {
 #  [main] -- Check for GeoLite2 database and download if missing
 check_geolite_db() {
     if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
+        echo "      # Downloading required GeoLite2-City.mmdb"
         wget -P ./promtail https://git.io/GeoLite2-City.mmdb  > /dev/null 2>&1
     fi
 }
@@ -528,7 +529,7 @@ echo "    # Verify and download required files"
     verify_required_files 1>/dev/null
     
 echo "    # Check for GeoLite2 database"
-    check_geolite_db 1>/dev/null
+    check_geolite_db
     
 echo "    # Run Docker Compose"
     run_docker_compose 1>/dev/null
