@@ -32,13 +32,13 @@ echo "      # Sudo password needed"
 
     # Check if running as root
     if [ "$EUID" -eq 0 ]; then
-        echo "Please do not run this script as root, it will use sudo when necessary"
+        echo -e "      # Please do not run this script as root, it will use sudo when necessary"
         exit 1
     fi
     
     # Check for Docker
     if ! command -v docker &> /dev/null; then
-        echo "Docker was not found and is required to continue. This will install docker."
+        echo "      # Docker was not found and is required to continue. This will install docker."
         read -p "Do you want to continue? (Y/n): " response
 
         if [[ "$response" =~ ^[Nn]$ ]]; then
@@ -52,7 +52,7 @@ echo "      # Sudo password needed"
     
     # Check for Docker Compose
     if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-        echo "Docker Compose is not installed, please install Docker Compose first."
+        echo "      # Docker Compose is not installed, please install Docker Compose first."
         exit 1
     fi
     
@@ -82,8 +82,8 @@ install_docker() {
 #  [main] -- Configure the domain name
 configure_domain() {
     if [ -z "$DOMAIN" ]; then
-        echo "Enter Full Domain -- example: (subdomain1.example.com)"
-        read -p "Enter domain name: " DOMAIN
+        echo "      # Enter Full Domain -- example: (subdomain1.example.com)"
+        read -p "  Enter domain name: " DOMAIN
     fi
 }
 
@@ -183,8 +183,8 @@ check_virtualization() {
 
 # Used in [configure_prereboot_systemd_network] -- Prompt for interface rename, this doesnt need to be a choice, but I made it a nonmandatory one.
 prompt_interface_rename() {
-    echo -e "Renaming the host interface responsible for the MacVLAN\n########## This--must--begin--with--a--letter ##########\n\nType in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
-    read -p "Enter interface name: " HOST_INTERFACE_NEW
+    echo -e "      # Renaming the host interface responsible for the MacVLAN\n        #  Interface must begin with a letter ##########\n\n      # Type in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
+    read -p "  Enter interface name: " HOST_INTERFACE_NEW
     HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW:-host_network}
     
     # Create interface rename file
@@ -210,8 +210,8 @@ EOF"
 setup_macvlan_ip() {
     # Attempt auto-assignment of IP
     if ping -c1 -w3 $(echo "$HOST_IP" | awk -F '.' '{print $1 "." $2 "." $3 "." $4+2}') >/dev/null 2>&1; then
-        echo "Please enter new IP address in subnet $(echo "$HOST_IP_SUBNET"), attempted IP Address already allocated" >&2
-        read -p "Enter IP address of traefik: " TRAEFIK_MACVLAN_IP
+        echo "      # Please enter new IP address in subnet $(echo "$HOST_IP_SUBNET"), attempted IP Address already allocated" >&2
+        read -p "  Enter IP address of traefik: " TRAEFIK_MACVLAN_IP
     else
         TRAEFIK_MACVLAN_IP=$(echo "$HOST_IP" | awk -F '.' '{print $1 "." $2 "." $3 "." $4+2}') >/dev/null 2>&1
     fi
@@ -299,15 +299,15 @@ countdown_and_reboot() {
 setup_docker_networks() {
     # Create traefik_proxy_net if it doesn't exist
     if ! docker network inspect traefik_proxy_net >/dev/null 2>&1; then
-        echo "Creating internal docker network: traefik_proxy_net"
+        echo "      # Creating internal docker network: traefik_proxy_net"
         docker network create traefik_proxy_net
     fi
     
     # Create traefik2host MacVLAN network if it doesn't exist
     if ! docker network inspect traefik2host >/dev/null 2>&1; then
-        echo "Creating MacVLAN docker network: traefik2host"
+        echo "      # Creating MacVLAN docker network: traefik2host"
         docker network create -d macvlan --subnet="${HOST_SUBNET}" --gateway="${HOST_GATEWAY}" -o parent=traefik2docker traefik2host || {
-            echo "Error: Failed to create the Docker network. Please re-run the script after a reboot has finished."
+            echo "  Error: Failed to create the Docker network. Please re-run the script after a reboot has finished."
             exit 1
         }
     fi
@@ -346,7 +346,7 @@ cleanup_github_files() {
         if [[ "$extra_git_dir" != /* ]]; then # Another check to avoid causing a bad day
             rm -r "$extra_git_dir"
         else
-            echo "Warning: Refusing to remove absolute path: $extra_git_dir"
+            echo "  Warning: Refusing to remove absolute path: $extra_git_dir"
         fi
     fi
 }
