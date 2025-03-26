@@ -15,7 +15,7 @@ display_banner() {
         sleep 0.25
         echo "   .::WARNING::    This Script Will Want to Reboot     ::WARNING::."
         echo " Please re-run script after reboot - reboot after script re-run pleasE"
-        sleep 3
+        sleep 1
     fi
 }
 
@@ -27,6 +27,7 @@ display_banner() {
 #  [main] -- Check all prerequisites before proceeding
 check_prerequisites() {
     # Prompt for sudo password
+echo "      # Sudo password needed"
     sudo -v
 
     # Check if running as root
@@ -182,7 +183,7 @@ check_virtualization() {
 
 # Used in [configure_prereboot_systemd_network] -- Prompt for interface rename, this doesnt need to be a choice, but I made it a nonmandatory one.
 prompt_interface_rename() {
-    echo -e "Renaming the host interface responsible for the MacVLAN\n\n########## This--must--begin--with--a--letter ##########\nType in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
+    echo -e "Renaming the host interface responsible for the MacVLAN\n########## This--must--begin--with--a--letter ##########\n\nType in a name for the interface connecting with traefik's MacVLAN -- example: (host_network)"
     read -p "Enter interface name: " HOST_INTERFACE_NEW
     HOST_INTERFACE_NEW=${HOST_INTERFACE_NEW:-host_network}
     
@@ -433,19 +434,7 @@ download_file() {
 #  [main] -- Check for GeoLite2 database and download if missing
 check_geolite_db() {
     if [ ! -f "./promtail/GeoLite2-City.mmdb" ]; then
-        echo "GeoLite2-City.mmdb was not found in the ./promtail directory!"
-        echo "You need GeoLite2-City.mmdb downloaded before running Docker!"
-        echo ""
-        sleep 1.5      
-        echo -e "GeoLite2-City.mmdb was not found and is required to continue.\nWould you like me to automatically download it for you so we can proceed?"
-        read -p "Do you want to continue? (Y/n): " response
-        
-        if [[ "$response" =~ ^[Nn]$ ]]; then
-            echo "Exiting..."
-            exit 1
-        else
-            wget -P ./promtail https://git.io/GeoLite2-City.mmdb
-        fi
+        wget -P ./promtail https://git.io/GeoLite2-City.mmdb  > /dev/null 2>&1
     fi
 }
 
