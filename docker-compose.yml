@@ -15,7 +15,7 @@ services:
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
     networks:
       traefik2host:
-        ipv4_address: ${TRAEFIK_MACVLAN_IP}
+        ipv4_address: ${TRAEFIK_MACVLAN_IP:?please specify this ip address in the .env file}
       traefik_proxy_net:
 
   whoami1:
