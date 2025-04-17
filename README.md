@@ -596,22 +596,18 @@ TMUXSETUP
     echo -e "\nAll tasks completed successfully!"
 
 else
+
     # We need to create the user first, check if we have root privileges
-    check_root
+        if [ "$(id -u)" -ne 0 ]; then
+            echo "This script must be run as root when creating a new user."
+            exit 1
+        fi
 
     # Check if all parameters are provided
     if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$GROUP" ] || [ -z "$SHELL" ] || [ -z "$FULL_NAME" ]; then
         echo "Usage: $0 <username> <password> <group> <shell> <full_name>"
         exit 1
     fi
-
-    # Function to check if script is run with root privileges
-    check_root() {
-        if [ "$(id -u)" -ne 0 ]; then
-            echo "This script must be run as root when creating a new user."
-            exit 1
-        fi
-    }
 
     # Install Sudo if not present
     if ! command -v sudo &> /dev/null; then
