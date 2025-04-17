@@ -418,3 +418,255 @@ You can view Traefik logs in Grafana:
 - `http://172.21.192.251:8080` access Traefik's dashboard
 
 
+## Docker User Setup Script
+
+
+<details>  
+
+<summary>Create a New User, Install Docker, and Tools</summary>  
+
+```bash
+#!/bin/bash
+
+# This script automates adding a new user, installing software, configuring the system, and more, without interaction.
+# Usage: ./add_user.sh <username> <password> <group> <shell> <full_name>
+#       ./add_user.sh john_doe secretpass123 developers /bin/bash "John Doe"
+
+
+# Parameters
+USERNAME=$1
+PASSWORD=$2
+GROUP=$3
+SHELL=$4
+FULL_NAME=$5
+
+
+# Function to check if the script is running as the newly created user
+check_user() {
+    if [ "$(whoami)" = "$USERNAME" ]; then
+        echo "You are now $USERNAME..."
+        return 0
+    else
+        echo "You are not $USERNAME..."
+        return 1
+    fi
+}
+
+# Main script logic
+# Check if we're running as the new user or need to create the user
+if check_user; then
+    # We are running as the newly created user, so set up their environment
+    
+    # Add environment variables and commands to .bashrc
+    echo -e "\n\n# Save the history regardless of what window you're in" >> "/home/$USERNAME/.bashrc"
+    echo "export PROMPT_COMMAND='history -a'" >> "/home/$USERNAME/.bashrc"
+    echo -e "\n\n# Save the history size to a worthwhile amount" >> "/home/$USERNAME/.bashrc"
+    echo "HISTSIZE=10000" >> "/home/$USERNAME/.bashrc"
+    echo "HISTFILESIZE=20000" >> "/home/$USERNAME/.bashrc"
+
+    # Add a function to kill all Docker containers
+    echo -e '\nkillalldocker() {\n  docker stop $(docker ps -a -q) 2>/dev/null\n  docker rm $(docker ps -a -q) 2>/dev/null\n}' >> "/home/$USERNAME/.bashrc"
+
+    # Add a function to start Docker containers with Docker Compose
+    echo -e '\nstartupdocker() {\n  docker compose up --build -d && echo waiting for containers to come up... && while docker ps | grep "health: starting" > /dev/null; do sleep 1; done\n}' >> "/home/$USERNAME/.bashrc"
+
+    # Apply .bashrc changes immediately for the user
+    source "/home/$USERNAME/.bashrc"
+
+    # Enable serial console service (ttyS0)
+    echo "Configuring serial console service..."; sleep 2;
+    sudo touch /lib/systemd/system/ttyS0.service
+    sudo bash -c "cat <<EOF > /lib/systemd/system/ttyS0.service
+[Unit]
+Description=Serial Console Service
+
+[Service]
+ExecStart=/sbin/getty -L 115200 ttyS0 vt102
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+    sudo chmod 644 /lib/systemd/system/ttyS0.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable ttyS0.service
+
+    # Install dependencies and Docker
+    echo "Installing system dependencies and Docker..."; sleep 4;
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install -y mc apt-transport-https ca-certificates curl software-properties-common
+
+    # Add Docker GPG key and repo, then install Docker
+    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt update && sudo apt install -y docker-ce
+    sudo usermod -aG docker "$USERNAME"
+
+    # Install extra software packages
+    echo "Installing extra software..."; sleep 2;
+    sudo apt install -y tmux mc ranger qemu-guest-agent spice-vdagent
+    ranger --copy-config=rc
+    echo "set show_hidden true" >> "/home/$USERNAME/.config/ranger/rc.conf"
+
+    # Install lazydocker
+    echo "Installing lazydocker..."; sleep 2;
+    curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+
+    # Add TMUX and FRIENDS
+    bash << 'TMUXSETUP'
+clear
+echo -e "INSTALL TMUX and FRIENDS\n\n"
+sleep 1
+sudo apt install -y tmux git xsel
+sleep 1
+clear
+echo -e "Adding plugin manager to tmux: \n\n"
+sleep 1
+[ ! -d ~/.tmux/plugins/tpm ] && git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+touch ~/.tmux.conf
+# Creating the tmux configuration file
+cat > ~/.tmux.conf << 'EOF'
+# 720 no scope pane switch
+set -g mouse on
+
+# Convert UTC to: Are we on Daylight savings time? In the Mountain timezone?
+set -g status-right '#(TZ="America/Denver" date +%%H:%%M:%%S)'
+
+# Scroll History
+set -g history-limit 30000
+
+# Default statusbar with less colors
+set-option -g status-bg colour0
+set-option -g status-fg colour7
+
+# Ensures new panes or windows inherit the working directory of the current pane:
+bind-key c new-window -c "#{pane_current_path}"
+bind-key % split-window -h -c "#{pane_current_path}"
+bind-key '"' split-window -v -c "#{pane_current_path}"
+
+# Disabling prevents accidental resizing
+setw -g aggressive-resize on
+
+# Reduce repeat-time to 200 milliseconds (default is 500ms)
+set-option -g repeat-time 200
+
+# By default, searching in the scrollback requires entering "copy mode" with C-b [ and then entering reverse search mode with C-r. Searching is common, so give it a dedicated C-b r.
+bind r {
+copy-mode
+command-prompt -i -p "(search up)" "send-keys -X search-backward-incremental '%%%'"
+}
+
+# Set ability to capture on start and restore on exit window data when running an application
+setw -g alternate-screen on
+
+# Lower escape timing from 500ms to 50ms for quicker response to scroll-buffer access.
+set -s escape-time 50
+
+# Start window numbering at 1 for easier switching
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Start numbering at 1
+set -g base-index 1
+
+# Default window title colors
+set-window-option -g automatic-rename on
+
+# Active window title colors
+setw -g window-status-current-format "|#I:#W|"
+
+# Change prefix command to C-z and unbind C-b
+#set -g prefix C-z
+#unbind C-b
+
+# List of plugins
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+tmux source-file ~/.tmux.conf > /dev/null 2>&1
+sleep 1; clear; printf 'To finish the job, you must open\n__tmux__\n\nand then hit \n__CTRL + b__\n\nthen within 2 seconds hit\n_I_ (capital I)\n ... this will install the plugin manager.\n\n'; sleep 1;
+TMUXSETUP
+
+    # Output completion message
+    echo -e "\nAll tasks completed successfully!"
+
+else
+    # We need to create the user first, check if we have root privileges
+    check_root
+
+    # Check if all parameters are provided
+    if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ] || [ -z "$GROUP" ] || [ -z "$SHELL" ] || [ -z "$FULL_NAME" ]; then
+        echo "Usage: $0 <username> <password> <group> <shell> <full_name>"
+        exit 1
+    fi
+
+    # Function to check if script is run with root privileges
+    check_root() {
+        if [ "$(id -u)" -ne 0 ]; then
+            echo "This script must be run as root when creating a new user."
+            exit 1
+        fi
+    }
+
+    # Install Sudo if not present
+    if ! command -v sudo &> /dev/null; then
+        apt update
+        apt install -y sudo
+    fi
+
+    # Check if the group exists, create it if not
+    if ! getent group "$GROUP" > /dev/null 2>&1; then
+        echo "Group '$GROUP' not found, creating it..."
+        groupadd "$GROUP"
+    fi
+
+    # Create the user with the given parameters
+    echo "Creating user '$USERNAME'..."; sleep 2;
+
+    # The -m option creates the home directory, -s specifies the shell, -c specifies full name
+    useradd -m -s "$SHELL" -c "$FULL_NAME" -g "$GROUP" "$USERNAME"
+
+    # Set the password for the user (encrypted using the specified password)
+    echo "$USERNAME:$PASSWORD" | chpasswd
+
+    # Ensure the user's home directory has the correct permissions
+    chown -R "$USERNAME":"$GROUP" "/home/$USERNAME"
+
+    # Add user to sudo group and modify sudoers file for full sudo access
+    echo "Adding user '$USERNAME' to sudo group..."
+    usermod -aG sudo "$USERNAME"
+    echo "$USERNAME    ALL=(ALL:ALL) ALL" | tee -a /etc/sudoers > /dev/null
+
+    # Set up initial .bashrc configurations
+    echo -e "\n\n# Save the history regardless of what window you're in" >> "/home/$USERNAME/.bashrc"
+    echo "export PROMPT_COMMAND='history -a'" >> "/home/$USERNAME/.bashrc"
+    echo -e "\n\n# Save the history size to a worthwhile amount" >> "/home/$USERNAME/.bashrc"
+    echo "HISTSIZE=10000" >> "/home/$USERNAME/.bashrc"
+    echo "HISTFILESIZE=20000" >> "/home/$USERNAME/.bashrc"
+
+    # Add a function to kill all Docker containers
+    echo -e '\nkillalldocker() {\n  docker stop $(docker ps -a -q) 2>/dev/null\n  docker rm $(docker ps -a -q) 2>/dev/null\n}' >> "/home/$USERNAME/.bashrc"
+
+    # Add a function to start Docker containers with Docker Compose
+    echo -e '\nstartupdocker() {\n  docker compose up --build -d && echo waiting for containers to come up... && while docker ps | grep "health: starting" > /dev/null; do sleep 1; done\n}' >> "/home/$USERNAME/.bashrc"
+
+    # Switch to the new user
+    echo "User '$USERNAME' created with all the specified configurations."
+    cp $(sudo ps -u root -o pid,etime,comm | grep [.]sh | awk '{print $3}') /home/$USERNAME
+    chmod 777 /home/$USERNAME/$(sudo ps -u root -o pid,etime,comm | grep [.]sh | awk '{print $3}')
+    chown $USERNAME:$USERNAME /home/$USERNAME/$(sudo ps -u root -o pid,etime,comm | grep [.]sh | awk '{print $3}')
+    echo "Switching to '$USERNAME'..."; sleep 2;
+    echo "Please rerun the same command you just ran, but in your home directory:"
+    echo "cd /home/$USERNAME/"
+    bash -c "fc -ln -1"
+    history 2
+    su "$USERNAME" -
+fi
+```
+</details> 
+
