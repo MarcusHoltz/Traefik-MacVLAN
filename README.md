@@ -1,4 +1,4 @@
-# Setting Up Docker MacVLAN Network for Traefik's Access Log Analytics from Promtail/Loki/Grafana: A Comprehensive Guide
+# Setting Up Docker MacVLAN Network for Traefik's Access Log Analytics from Promtail/Loki/Grafana
 
 I am working to pass the source IPs coming in to the containers in docker. I do not want to use host, and as far as I understand this is not possible in bridge mode. It is possible with a MacVLAN.
 
